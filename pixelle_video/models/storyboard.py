@@ -45,6 +45,7 @@ class StoryboardConfig:
     tts_workflow: Optional[str] = None         # TTS workflow filename (for ComfyUI mode, None = use default)
     tts_speed: Optional[float] = None          # TTS speed multiplier (0.5-2.0, 1.0 = normal)
     ref_audio: Optional[str] = None            # Reference audio for voice cloning (ComfyUI mode only)
+    ref_text: Optional[str] = None             # Transcript of reference audio for voice cloning (ComfyUI mode only)
     
     # Media workflow
     media_workflow: Optional[str] = None       # Media workflow filename (image or video, None = use default)
@@ -140,4 +141,3 @@ class VideoGenerationResult:
     duration: float                            # Total duration
     file_size: int                             # File size (bytes)
     created_at: datetime = field(default_factory=datetime.now)
-

@@ -118,6 +118,7 @@ def render_style_config(pixelle_video):
             # Variables for video generation
             tts_workflow_key = None
             ref_audio_path = None
+            ref_text = None
         
         # ================================================================
         # ComfyUI Mode UI
@@ -174,6 +175,15 @@ def render_style_config(pixelle_video):
                 ref_audio_path = temp_dir / f"ref_audio_{ref_audio_file.name}"
                 with open(ref_audio_path, "wb") as f:
                     f.write(ref_audio_file.getbuffer())
+
+            ref_text = st.text_area(
+                tr("tts.ref_text"),
+                value=st.session_state.get("tts_ref_text", ""),
+                placeholder=tr("tts.ref_text_placeholder"),
+                help=tr("tts.ref_text_help"),
+                key="tts_ref_text",
+                height=96,
+            )
             
             # Variables for video generation
             selected_voice = None
@@ -208,6 +218,8 @@ def render_style_config(pixelle_video):
                             tts_params["workflow"] = tts_workflow_key
                             if ref_audio_path:
                                 tts_params["ref_audio"] = str(ref_audio_path)
+                            if ref_text:
+                                tts_params["ref_text"] = ref_text
                         
                         audio_path = run_async(pixelle_video.tts(**tts_params))
                         
@@ -868,6 +880,7 @@ def render_style_config(pixelle_video):
         "tts_speed": tts_speed if tts_mode == "local" else None,
         "tts_workflow": tts_workflow_key if tts_mode == "comfyui" else None,
         "ref_audio": str(ref_audio_path) if ref_audio_path else None,
+        "ref_text": ref_text if tts_mode == "comfyui" and ref_text else None,
         "frame_template": frame_template,
         "template_params": custom_values_for_video if custom_values_for_video else None,
         "media_workflow": workflow_key,

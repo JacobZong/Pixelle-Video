@@ -37,6 +37,7 @@ async def tts_synthesize(
     - **text**: Text to synthesize
     - **workflow**: TTS workflow key (optional, uses default if not specified)
     - **ref_audio**: Reference audio for voice cloning (optional)
+    - **ref_text**: Transcript of the reference audio for voice cloning (optional)
     - **voice_id**: (Deprecated) Voice ID for legacy compatibility
     
     Returns path to generated audio file and duration.
@@ -54,7 +55,8 @@ async def tts_synthesize(
     {
         "text": "Hello, this is a cloned voice",
         "workflow": "runninghub/tts_index2.json",
-        "ref_audio": "path/to/reference.wav"
+        "ref_audio": "path/to/reference.wav",
+        "ref_text": "Exact transcript of the reference audio."
     }
     ```
     """
@@ -63,6 +65,9 @@ async def tts_synthesize(
         
         # Build TTS parameters
         tts_params = {"text": request.text}
+
+        if request.inference_mode or request.workflow:
+            tts_params["inference_mode"] = request.inference_mode or "comfyui"
         
         # Add workflow if specified
         if request.workflow:
@@ -71,6 +76,10 @@ async def tts_synthesize(
         # Add ref_audio if specified
         if request.ref_audio:
             tts_params["ref_audio"] = request.ref_audio
+
+        # Add reference transcript if specified
+        if request.ref_text:
+            tts_params["ref_text"] = request.ref_text
         
         # Legacy voice_id support (deprecated)
         if request.voice_id and not request.workflow:
@@ -91,4 +100,3 @@ async def tts_synthesize(
     except Exception as e:
         logger.error(f"TTS synthesis error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-

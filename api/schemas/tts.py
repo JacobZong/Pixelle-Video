@@ -14,20 +14,28 @@
 TTS API schemas
 """
 
-from typing import Optional
+from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 
 class TTSSynthesizeRequest(BaseModel):
     """TTS synthesis request"""
     text: str = Field(..., description="Text to synthesize")
+    inference_mode: Optional[Literal["local", "comfyui"]] = Field(
+        None,
+        description="TTS synthesis mode. If omitted, a provided workflow implies 'comfyui'."
+    )
     workflow: Optional[str] = Field(
         None, 
-        description="TTS workflow key (e.g., 'runninghub/tts_edge.json' or 'selfhost/tts_edge.json'). If not specified, uses default workflow from config."
+        description="TTS workflow key (e.g., 'comfy_cloud/tts_qwen3_personal_voice.json'). If not specified, uses default workflow from config."
     )
     ref_audio: Optional[str] = Field(
         None, 
         description="Reference audio path for voice cloning (optional). Can be a local file path or URL."
+    )
+    ref_text: Optional[str] = Field(
+        None,
+        description="Transcript of the reference audio for voice cloning workflows such as ComfyUI Cloud Qwen3-TTS."
     )
     voice_id: Optional[str] = Field(
         None, 
@@ -39,7 +47,8 @@ class TTSSynthesizeRequest(BaseModel):
             "example": {
                 "text": "Hello, welcome to Pixelle-Video!",
                 "workflow": "runninghub/tts_edge.json",
-                "ref_audio": None
+                "ref_audio": None,
+                "ref_text": None
             }
         }
 
@@ -50,4 +59,3 @@ class TTSSynthesizeResponse(BaseModel):
     message: str = "Success"
     audio_path: str = Field(..., description="Path to generated audio file")
     duration: float = Field(..., description="Audio duration in seconds")
-

@@ -37,13 +37,21 @@ class VideoGenerateRequest(BaseModel):
     n_scenes: Optional[int] = Field(5, ge=1, le=20, description="Number of scenes (only used in 'generate' mode, ignored in 'fixed' mode)")
     
     # === TTS Parameters ===
+    tts_inference_mode: Optional[Literal["local", "comfyui"]] = Field(
+        None,
+        description="TTS synthesis mode. If omitted, a provided tts_workflow implies 'comfyui'."
+    )
     tts_workflow: Optional[str] = Field(
         None, 
-        description="TTS workflow key (e.g., 'runninghub/tts_edge.json'). If not specified, uses default workflow from config."
+        description="TTS workflow key (e.g., 'comfy_cloud/tts_qwen3_personal_voice.json'). If not specified, uses default workflow from config."
     )
     ref_audio: Optional[str] = Field(
         None, 
         description="Reference audio path for voice cloning (optional)"
+    )
+    ref_text: Optional[str] = Field(
+        None,
+        description="Transcript of the reference audio for voice cloning workflows such as ComfyUI Cloud Qwen3-TTS"
     )
     voice_id: Optional[str] = Field(
         None, 
@@ -113,4 +121,3 @@ class VideoGenerateAsyncResponse(BaseModel):
     success: bool = True
     message: str = "Task created successfully"
     task_id: str = Field(..., description="Task ID for tracking progress")
-

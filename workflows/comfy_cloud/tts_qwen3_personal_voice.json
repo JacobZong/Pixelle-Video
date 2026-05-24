@@ -1,0 +1,51 @@
+{
+  "1": {
+    "inputs": {
+      "audio": ""
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "$~ref_audio.audio!"
+    }
+  },
+  "2": {
+    "inputs": {
+      "ref_audio": [
+        "1",
+        0
+      ],
+      "target_text": "你好，这是一段测试语音。",
+      "model_choice": "1.7B",
+      "device": "auto",
+      "precision": "bf16",
+      "language": "Chinese",
+      "ref_text": "这是参考音频中实际说出的文本。",
+      "seed": 1779178254010,
+      "max_new_tokens": 2048,
+      "top_p": 0.8,
+      "top_k": 20,
+      "temperature": 1.0,
+      "repetition_penalty": 1.05,
+      "x_vector_only": false,
+      "attention": "auto",
+      "unload_model_after_generate": false
+    },
+    "class_type": "FB_Qwen3TTSVoiceClone",
+    "_meta": {
+      "title": "Qwen3-TTS VoiceClone, $text.target_text!, $ref_text.ref_text!"
+    }
+  },
+  "3": {
+    "inputs": {
+      "audio": [
+        "2",
+        0
+      ],
+      "filename_prefix": "comfyui-cloud-qwen3-personal-voice"
+    },
+    "class_type": "SaveAudio",
+    "_meta": {
+      "title": "Save Audio"
+    }
+  }
+}

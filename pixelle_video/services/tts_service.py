@@ -34,6 +34,14 @@ def _safe_tts_log_value(value: str) -> str:
     return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
 
 
+def _safe_tts_params_for_log(params: dict) -> dict:
+    safe = dict(params)
+    for key in ("ref_audio", "ref_text"):
+        if key in safe and safe[key]:
+            safe[key] = "***"
+    return safe
+
+
 class TTSService(ComfyBaseService):
     """
     TTS (Text-to-Speech) service - Workflow-based
@@ -242,7 +250,7 @@ class TTSService(ComfyBaseService):
         # Add any additional parameters
         workflow_params.update(params)
         
-        logger.debug(f"Workflow parameters: {workflow_params}")
+        logger.debug(f"Workflow parameters: {_safe_tts_params_for_log(workflow_params)}")
         
         # 3. Execute workflow using shared ComfyKit instance from core
         try:

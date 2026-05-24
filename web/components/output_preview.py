@@ -56,6 +56,7 @@ def render_single_output(pixelle_video, video_params):
     tts_speed = video_params.get("tts_speed")
     tts_workflow_key = video_params.get("tts_workflow")
     ref_audio_path = video_params.get("ref_audio")
+    ref_text = video_params.get("ref_text")
     
     frame_template = video_params.get("frame_template")
     custom_values_for_video = video_params.get("template_params", {})
@@ -150,6 +151,8 @@ def render_single_output(pixelle_video, video_params):
                     video_params["tts_workflow"] = tts_workflow_key
                     if ref_audio_path:
                         video_params["ref_audio"] = str(ref_audio_path)
+                    if ref_text:
+                        video_params["ref_text"] = ref_text
                 
                 # Add custom template parameters if any
                 if custom_values_for_video:
@@ -274,6 +277,9 @@ def render_batch_output(pixelle_video, video_params):
                 ref_audio = video_params.get("ref_audio")
                 if ref_audio:
                     shared_config["ref_audio"] = str(ref_audio)
+                ref_text = video_params.get("ref_text")
+                if ref_text:
+                    shared_config["ref_text"] = ref_text
             
             # Add template parameters
             if video_params.get("template_params"):

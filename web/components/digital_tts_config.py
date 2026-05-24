@@ -117,12 +117,33 @@ def render_style_config(pixelle_video):
             # Variables for video generation
             tts_workflow_key = None
             ref_audio_path = None
+            ref_text = None
         
         # ================================================================
         # ComfyUI Mode UI
         # ================================================================
         else:  # comfyui mode
-            tts_workflow_key = "runninghub/tts_index2.json"  # fallback
+            tts_workflows = pixelle_video.tts.list_workflows()
+            tts_workflow_options = [wf["display_name"] for wf in tts_workflows]
+            tts_workflow_keys = [wf["key"] for wf in tts_workflows]
+            default_tts_index = 0
+            saved_tts_workflow = tts_config.get("comfyui", {}).get("default_workflow")
+            if saved_tts_workflow and saved_tts_workflow in tts_workflow_keys:
+                default_tts_index = tts_workflow_keys.index(saved_tts_workflow)
+
+            tts_workflow_display = st.selectbox(
+                "TTS Workflow",
+                tts_workflow_options if tts_workflow_options else ["No TTS workflows found"],
+                index=default_tts_index,
+                label_visibility="collapsed",
+                key="digital_tts_workflow_select"
+            )
+
+            if tts_workflow_options:
+                tts_selected_index = tts_workflow_options.index(tts_workflow_display)
+                tts_workflow_key = tts_workflow_keys[tts_selected_index]
+            else:
+                tts_workflow_key = "selfhost/tts_edge.json"
             
             # Reference audio upload (optional, for voice cloning)
             ref_audio_file = st.file_uploader(
@@ -144,6 +165,15 @@ def render_style_config(pixelle_video):
                 ref_audio_path = temp_dir / f"ref_audio_{ref_audio_file.name}"
                 with open(ref_audio_path, "wb") as f:
                     f.write(ref_audio_file.getbuffer())
+
+            ref_text = st.text_area(
+                tr("tts.ref_text"),
+                value=st.session_state.get("digital_tts_ref_text", ""),
+                placeholder=tr("tts.ref_text_placeholder"),
+                help=tr("tts.ref_text_help"),
+                key="digital_tts_ref_text",
+                height=96,
+            )
             
             # Variables for video generation
             selected_voice = None
@@ -178,6 +208,8 @@ def render_style_config(pixelle_video):
                             tts_params["workflow"] = tts_workflow_key
                             if ref_audio_path:
                                 tts_params["ref_audio"] = str(ref_audio_path)
+                            if ref_text:
+                                tts_params["ref_text"] = ref_text
                         
                         audio_path = run_async(pixelle_video.tts(**tts_params))
                         
@@ -206,4 +238,5 @@ def render_style_config(pixelle_video):
         "tts_speed": tts_speed if tts_mode == "local" else None,
         "tts_workflow": tts_workflow_key if tts_mode == "comfyui" else None,
         "ref_audio": str(ref_audio_path) if ref_audio_path else None,
+        "ref_text": ref_text if tts_mode == "comfyui" and ref_text else None,
     }

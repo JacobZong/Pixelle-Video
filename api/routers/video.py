@@ -137,6 +137,10 @@ async def generate_video_sync(
             "bgm_path": request_body.bgm_path,
             "bgm_volume": request_body.bgm_volume,
         }
+
+        tts_inference_mode = request_body.tts_inference_mode
+        if tts_inference_mode or request_body.tts_workflow:
+            video_params["tts_inference_mode"] = tts_inference_mode or "comfyui"
         
         # Add TTS workflow if specified
         if request_body.tts_workflow:
@@ -145,6 +149,10 @@ async def generate_video_sync(
         # Add ref_audio if specified
         if request_body.ref_audio:
             video_params["ref_audio"] = request_body.ref_audio
+
+        # Add reference transcript if specified
+        if request_body.ref_text:
+            video_params["ref_text"] = request_body.ref_text
         
         # Legacy voice_id support (deprecated)
         if request_body.voice_id:
@@ -242,6 +250,10 @@ async def generate_video_async(
                 # Progress callback can be added here if needed
                 # "progress_callback": lambda event: task_manager.update_progress(...)
             }
+
+            tts_inference_mode = request_body.tts_inference_mode
+            if tts_inference_mode or request_body.tts_workflow:
+                video_params["tts_inference_mode"] = tts_inference_mode or "comfyui"
             
             # Add TTS workflow if specified
             if request_body.tts_workflow:
@@ -250,6 +262,10 @@ async def generate_video_async(
             # Add ref_audio if specified
             if request_body.ref_audio:
                 video_params["ref_audio"] = request_body.ref_audio
+
+            # Add reference transcript if specified
+            if request_body.ref_text:
+                video_params["ref_text"] = request_body.ref_text
             
             # Legacy voice_id support (deprecated)
             if request_body.voice_id:
@@ -287,4 +303,3 @@ async def generate_video_async(
     except Exception as e:
         logger.error(f"Async video generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-

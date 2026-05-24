@@ -32,6 +32,10 @@ comfyui:
   
   # TTS-specific configuration
   tts:
+    # Options include:
+    # - selfhost/tts_edge.json
+    # - runninghub/tts_edge.json
+    # - comfy_cloud/tts_qwen3_personal_voice.json (requires ref_audio + ref_text)
     default_workflow: selfhost/tts_edge.json  # TTS workflow to use
   
   # Image-specific configuration

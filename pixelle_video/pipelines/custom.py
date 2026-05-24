@@ -92,6 +92,7 @@ class CustomPipeline(BasePipeline):
         tts_workflow: Optional[str] = None,
         tts_speed: float = 1.2,
         ref_audio: Optional[str] = None,
+        ref_text: Optional[str] = None,
         
         media_workflow: Optional[str] = None,
         # Note: media_width and media_height are auto-determined from template
@@ -270,6 +271,7 @@ class CustomPipeline(BasePipeline):
             tts_workflow=final_tts_workflow,  # Use processed workflow
             tts_speed=tts_speed,
             ref_audio=ref_audio,
+            ref_text=ref_text,
             media_width=media_width,
             media_height=media_height,
             media_workflow=media_workflow,
@@ -387,6 +389,7 @@ class CustomPipeline(BasePipeline):
                     "tts_workflow": tts_workflow,
                     "tts_speed": tts_speed,
                     "ref_audio": ref_audio,
+                    "ref_text": ref_text,
                     "media_workflow": media_workflow,
                     "frame_template": frame_template,
                     "bgm_path": bgm_path,
@@ -560,4 +563,3 @@ class QuickPipeline(BasePipeline):
 pixelle_video.pipelines["quick"] = QuickPipeline(pixelle_video)
 result = await pixelle_video.generate_video(text=content, pipeline="quick")
 """
-

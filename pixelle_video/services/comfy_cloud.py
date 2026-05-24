@@ -317,6 +317,33 @@ class ComfyCloudExecutor(ComfyUIExecutor):
                 body = await response.text()
                 raise Exception(f"ComfyUI Cloud view failed: HTTP {response.status}: {body[:500]}")
 
+    async def _handle_media_upload(self, node_data: Dict[str, Any], input_field: str, param_value: Any):
+        """
+        Handle ComfyUI Cloud media inputs.
+
+        Local paths and URLs are uploaded to Cloud first. Plain strings are
+        treated as Cloud-known input filenames, which is required for reusable
+        voice profiles that already store reference_audio_cloud_filename.
+        """
+        if isinstance(param_value, str):
+            if param_value.startswith(("http://", "https://")):
+                media_value = await self._upload_media_from_source(param_value)
+                await self._set_node_param(node_data, input_field, media_value)
+                logger.info(f"Media upload successful: {media_value}")
+                return
+
+            if os.path.exists(param_value):
+                uploaded_filename = await self._upload_media(param_value)
+                await self._set_node_param(node_data, input_field, uploaded_filename)
+                logger.info(f"Media upload successful (local file): {uploaded_filename}")
+                return
+
+            await self._set_node_param(node_data, input_field, param_value)
+            logger.info(f"Using existing ComfyUI Cloud input file: {param_value}")
+            return
+
+        await self._set_node_param(node_data, input_field, param_value)
+
     async def _upload_media(self, media_path: str) -> str:
         with open(media_path, "rb") as f:
             media_data = f.read()

@@ -184,6 +184,8 @@ class FrameProcessor:
                 tts_params["speed"] = config.tts_speed
             if config.ref_audio:
                 tts_params["ref_audio"] = config.ref_audio
+            if config.ref_text:
+                tts_params["ref_text"] = config.ref_text
         
         audio_path = await self.core.tts(**tts_params)
         
@@ -444,4 +446,3 @@ class FrameProcessor:
             logger.warning(f"Failed to get video duration: {e}, using audio duration")
             # Fallback: use audio duration if available
             return 1.0  # Default to 1 second if unable to determine
-
