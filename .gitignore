@@ -62,6 +62,7 @@ test_*.py
 temp/
 tmp/
 .cache/
+.local-dev/
 
 # MkDocs build output
 site/
