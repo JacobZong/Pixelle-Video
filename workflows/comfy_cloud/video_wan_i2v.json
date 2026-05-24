@@ -1,0 +1,78 @@
+{
+  "2": {
+    "inputs": {
+      "prompt": [
+        "3",
+        0
+      ],
+      "model": "gemini-2.5-flash-image-preview",
+      "seed": 42
+    },
+    "class_type": "GeminiImageNode",
+    "_meta": {
+      "title": "Google Gemini Image"
+    }
+  },
+  "3": {
+    "inputs": {
+      "value": ""
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "$prompt.value!"
+    }
+  },
+  "4": {
+    "inputs": {
+      "filename_prefix": "comfyui-cloud-i2v-keyframe",
+      "images": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Keyframe"
+    }
+  },
+  "5": {
+    "inputs": {
+      "model": "wan2.6-i2v",
+      "image": [
+        "2",
+        0
+      ],
+      "prompt": [
+        "3",
+        0
+      ],
+      "negative_prompt": "text, subtitles, captions, watermark, logo, distorted hands, distorted face, low quality, blurry",
+      "resolution": "720P",
+      "duration": 5,
+      "seed": 42,
+      "generate_audio": false,
+      "prompt_extend": true,
+      "watermark": false,
+      "shot_type": "single"
+    },
+    "class_type": "WanImageToVideoApi",
+    "_meta": {
+      "title": "Wan Image to Video"
+    }
+  },
+  "6": {
+    "inputs": {
+      "video": [
+        "5",
+        0
+      ],
+      "filename_prefix": "comfyui-cloud-i2v",
+      "format": "mp4",
+      "codec": "h264"
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  }
+}
