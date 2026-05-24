@@ -18,13 +18,20 @@ import os
 import uuid
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
-from comfykit import ComfyKit
 from loguru import logger
 
 from pixelle_video.services.comfy_base_service import ComfyBaseService
 from pixelle_video.utils.tts_util import edge_tts
 from pixelle_video.tts_voices import speed_to_rate
+
+
+def _safe_tts_log_value(value: str) -> str:
+    if not isinstance(value, str) or not value.startswith(("http://", "https://")):
+        return str(value)
+    parsed = urlsplit(value)
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
 
 
 class TTSService(ComfyBaseService):
@@ -239,20 +246,7 @@ class TTSService(ComfyBaseService):
         
         # 3. Execute workflow using shared ComfyKit instance from core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
-            kit = await self.core._get_or_create_comfykit()
-            
-            # Determine what to pass to ComfyKit based on source
-            if workflow_info["source"] == "runninghub" and "workflow_id" in workflow_info:
-                # RunningHub: pass workflow_id
-                workflow_input = workflow_info["workflow_id"]
-                logger.info(f"Executing RunningHub TTS workflow: {workflow_input}")
-            else:
-                # Selfhost: pass file path
-                workflow_input = workflow_info["path"]
-                logger.info(f"Executing selfhost TTS workflow: {workflow_input}")
-            
-            result = await kit.execute(workflow_input, workflow_params)
+            result = await self._execute_workflow(workflow_info, workflow_params)
             
             # 4. Handle result
             if result.status != "completed":
@@ -267,19 +261,19 @@ class TTSService(ComfyBaseService):
             # Check for audio files in result.audios (if available)
             if hasattr(result, 'audios') and result.audios:
                 audio_path = result.audios[0]
-                logger.debug(f"✅ Found audio in result.audios: {audio_path}")
+                logger.debug(f"✅ Found audio in result.audios: {_safe_tts_log_value(audio_path)}")
             # Check for files in result.files
             elif hasattr(result, 'files') and result.files:
                 audio_path = result.files[0]
-                logger.debug(f"✅ Found audio in result.files: {audio_path}")
+                logger.debug(f"✅ Found audio in result.files: {_safe_tts_log_value(audio_path)}")
             # Check in outputs dictionary
             elif hasattr(result, 'outputs') and result.outputs:
-                logger.debug(f"Searching for audio file in result.outputs: {result.outputs}")
+                logger.debug("Searching for audio file in result.outputs")
                 # Try to find audio file in outputs
                 for key, value in result.outputs.items():
                     if isinstance(value, str) and any(value.endswith(ext) for ext in ['.mp3', '.wav', '.flac']):
                         audio_path = value
-                        logger.debug(f"✅ Found audio in result.outputs[{key}]: {audio_path}")
+                        logger.debug(f"✅ Found audio in result.outputs[{key}]: {_safe_tts_log_value(audio_path)}")
                         break
             
             if not audio_path:
@@ -299,7 +293,7 @@ class TTSService(ComfyBaseService):
                 # Ensure parent directory exists
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
                 
-                logger.info(f"Downloading audio from {audio_path} to {output_path}")
+                logger.info(f"Downloading audio from {_safe_tts_log_value(audio_path)} to {output_path}")
                 async with httpx.AsyncClient() as client:
                     response = await client.get(audio_path)
                     response.raise_for_status()
@@ -310,7 +304,7 @@ class TTSService(ComfyBaseService):
                 logger.info(f"✅ Generated audio (ComfyUI): {output_path}")
                 return output_path
             
-            logger.info(f"✅ Generated audio (ComfyUI): {audio_path}")
+            logger.info(f"✅ Generated audio (ComfyUI): {_safe_tts_log_value(audio_path)}")
             return audio_path
         
         except Exception as e:

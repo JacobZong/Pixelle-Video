@@ -38,6 +38,14 @@ from pixelle_video.pipelines.custom import CustomPipeline
 from pixelle_video.pipelines.asset_based import AssetBasedPipeline
 
 
+def _redact_secret_config(config: dict) -> dict:
+    redacted = dict(config)
+    for key in ("api_key", "runninghub_api_key"):
+        if redacted.get(key):
+            redacted[key] = "***"
+    return redacted
+
+
 class PixelleVideoCore:
     """
     Pixelle-Video Core - Service Layer
@@ -169,7 +177,7 @@ class PixelleVideoCore:
             
             # Create new instance with current config
             logger.info("✨ Creating ComfyKit instance...")
-            logger.debug(f"ComfyKit config: {current_config}")
+            logger.debug(f"ComfyKit config: {_redact_secret_config(current_config)}")
             self._comfykit = ComfyKit(**current_config)
             self._comfykit_config_hash = current_hash
             logger.info("✅ ComfyKit instance created")

@@ -18,12 +18,19 @@ Automatically detects output type based on ExecuteResult.
 """
 
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
-from comfykit import ComfyKit
 from loguru import logger
 
 from pixelle_video.services.comfy_base_service import ComfyBaseService
 from pixelle_video.models.media import MediaResult
+
+
+def _safe_media_log_value(url: str) -> str:
+    if not isinstance(url, str) or not url.startswith(("http://", "https://")):
+        return str(url)
+    parsed = urlsplit(url)
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
 
 
 class MediaService(ComfyBaseService):
@@ -227,20 +234,7 @@ class MediaService(ComfyBaseService):
         
         # 4. Execute workflow using shared ComfyKit instance from core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
-            kit = await self.core._get_or_create_comfykit()
-            
-            # Determine what to pass to ComfyKit based on source
-            if workflow_info["source"] == "runninghub" and "workflow_id" in workflow_info:
-                # RunningHub: pass workflow_id (ComfyKit will use runninghub backend)
-                workflow_input = workflow_info["workflow_id"]
-                logger.info(f"Executing RunningHub workflow: {workflow_input}")
-            else:
-                # Selfhost: pass file path (ComfyKit will use local ComfyUI)
-                workflow_input = workflow_info["path"]
-                logger.info(f"Executing selfhost workflow: {workflow_input}")
-            
-            result = await kit.execute(workflow_input, workflow_params)
+            result = await self._execute_workflow(workflow_info, workflow_params)
             
             # 5. Handle result based on specified media_type
             if result.status != "completed":
@@ -256,7 +250,7 @@ class MediaService(ComfyBaseService):
                     raise Exception("No video generated")
                 
                 video_url = result.videos[0]
-                logger.info(f"✅ Generated video: {video_url}")
+                logger.info(f"✅ Generated video: {_safe_media_log_value(video_url)}")
                 
                 # Try to extract duration from result (if available)
                 duration = None
@@ -275,7 +269,7 @@ class MediaService(ComfyBaseService):
                     raise Exception("No image generated")
                 
                 image_url = result.images[0]
-                logger.info(f"✅ Generated image: {image_url}")
+                logger.info(f"✅ Generated image: {_safe_media_log_value(image_url)}")
                 
                 return MediaResult(
                     media_type="image",

@@ -23,6 +23,10 @@ comfyui:
   comfyui_url: http://127.0.0.1:8188  # ComfyUI server URL (required for selfhost workflows)
   comfyui_api_key: ""  # ComfyUI API key (optional, get from https://platform.comfy.org/profile/api-keys)
   # Note for Docker users: Use host.docker.internal:8188 (Mac/Windows) or host IP address (Linux)
+  # ComfyUI Cloud settings (required for comfy_cloud workflows)
+  comfy_cloud_base_url: https://cloud.comfy.org/api
+  comfy_cloud_api_key: ""  # ComfyUI Cloud API key (sent via X-API-Key, do not hardcode in code)
+  comfy_cloud_timeout: 600  # Job timeout in seconds
   runninghub_api_key: ""  # RunningHub API key (required for runninghub workflows)
   runninghub_concurrent_limit: 1  # Concurrent execution limit for RunningHub (1-10, default 1 for regular members)
   

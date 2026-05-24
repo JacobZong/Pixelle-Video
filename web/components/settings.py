@@ -244,9 +244,60 @@ def render_advanced_settings():
                         st.error(f"{tr('status.connection_failed')}: {str(e)}")
                 
                 st.markdown("---")
+
+                # Official ComfyUI Cloud configuration
+                st.markdown(f"**{tr('settings.comfyui.comfy_cloud_title')}**")
+                saved_cloud_base_url = comfyui_config.get("comfy_cloud_base_url") or "https://cloud.comfy.org/api"
+                saved_cloud_api_key = comfyui_config.get("comfy_cloud_api_key") or ""
+                if not saved_cloud_api_key and "cloud.comfy.org" in (comfyui_config.get("comfyui_url") or ""):
+                    saved_cloud_base_url = comfyui_config.get("comfyui_url") or saved_cloud_base_url
+                    saved_cloud_api_key = comfyui_config.get("comfyui_api_key") or ""
+
+                cloud_url_col, cloud_key_col = st.columns(2)
+                with cloud_url_col:
+                    comfy_cloud_base_url = st.text_input(
+                        tr("settings.comfyui.comfy_cloud_base_url"),
+                        value=saved_cloud_base_url,
+                        help=tr("settings.comfyui.comfy_cloud_base_url_help"),
+                        key="comfy_cloud_base_url_input"
+                    )
+                with cloud_key_col:
+                    comfy_cloud_api_key = st.text_input(
+                        tr("settings.comfyui.comfy_cloud_api_key"),
+                        value=saved_cloud_api_key,
+                        type="password",
+                        help=tr("settings.comfyui.comfy_cloud_api_key_help"),
+                        key="comfy_cloud_api_key_input"
+                    )
+
+                comfy_cloud_timeout = st.number_input(
+                    tr("settings.comfyui.comfy_cloud_timeout"),
+                    min_value=30,
+                    max_value=7200,
+                    value=int(comfyui_config.get("comfy_cloud_timeout") or 600),
+                    help=tr("settings.comfyui.comfy_cloud_timeout_help"),
+                    key="comfy_cloud_timeout_input"
+                )
+
+                if st.button(tr("btn.test_connection"), key="test_comfy_cloud", use_container_width=True):
+                    try:
+                        import requests
+                        base_url = comfy_cloud_base_url.rstrip("/")
+                        if not base_url.endswith("/api"):
+                            base_url = f"{base_url}/api"
+                        headers = {"X-API-Key": comfy_cloud_api_key}
+                        response = requests.get(f"{base_url}/object_info", headers=headers, timeout=15)
+                        if response.status_code == 200:
+                            st.success(tr("status.connection_success"))
+                        else:
+                            st.error(f"{tr('status.connection_failed')}: HTTP {response.status_code}")
+                    except Exception as e:
+                        st.error(f"{tr('status.connection_failed')}: {str(e)}")
+
+                st.markdown("---")
                 
                 # RunningHub cloud configuration
-                st.markdown(f"**{tr('settings.comfyui.cloud_title')}**")
+                st.markdown(f"**{tr('settings.comfyui.runninghub_title')}**")
                 runninghub_api_key = st.text_input(
                     tr("settings.comfyui.runninghub_api_key"),
                     value=comfyui_config.get("runninghub_api_key", ""),
@@ -311,6 +362,9 @@ def render_advanced_settings():
                     config_manager.set_comfyui_config(
                         comfyui_url=comfyui_url if comfyui_url else None,
                         comfyui_api_key=comfyui_api_key if comfyui_api_key else None,
+                        comfy_cloud_base_url=comfy_cloud_base_url if comfy_cloud_base_url else None,
+                        comfy_cloud_api_key=comfy_cloud_api_key if comfy_cloud_api_key else None,
+                        comfy_cloud_timeout=int(comfy_cloud_timeout),
                         runninghub_api_key=runninghub_api_key if runninghub_api_key else None,
                         runninghub_concurrent_limit=int(runninghub_concurrent_limit),
                         runninghub_instance_type=instance_type
@@ -332,4 +386,3 @@ def render_advanced_settings():
                 config_manager.save()
                 st.success(tr("status.config_reset"))
                 safe_rerun()
-

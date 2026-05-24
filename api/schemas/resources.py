@@ -22,7 +22,7 @@ class WorkflowInfo(BaseModel):
     """Workflow information"""
     name: str = Field(..., description="Workflow filename")
     display_name: str = Field(..., description="Display name with source info")
-    source: str = Field(..., description="Source (runninghub or selfhost)")
+    source: str = Field(..., description="Source (runninghub, comfy_cloud, or selfhost)")
     path: str = Field(..., description="Full path to workflow file")
     key: str = Field(..., description="Workflow key (source/name)")
     workflow_id: Optional[str] = Field(None, description="RunningHub workflow ID (if applicable)")
@@ -66,4 +66,3 @@ class BGMListResponse(BaseModel):
     success: bool = True
     message: str = "Success"
     bgm_files: List[BGMInfo] = Field(..., description="List of available BGM files")
-

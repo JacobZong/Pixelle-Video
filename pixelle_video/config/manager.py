@@ -129,6 +129,9 @@ class ConfigManager:
         return {
             "comfyui_url": self.config.comfyui.comfyui_url,
             "comfyui_api_key": self.config.comfyui.comfyui_api_key,
+            "comfy_cloud_base_url": self.config.comfyui.comfy_cloud_base_url,
+            "comfy_cloud_api_key": self.config.comfyui.comfy_cloud_api_key,
+            "comfy_cloud_timeout": self.config.comfyui.comfy_cloud_timeout,
             "runninghub_api_key": self.config.comfyui.runninghub_api_key,
             "runninghub_concurrent_limit": self.config.comfyui.runninghub_concurrent_limit,
             "runninghub_instance_type": self.config.comfyui.runninghub_instance_type,
@@ -149,6 +152,9 @@ class ConfigManager:
         self, 
         comfyui_url: Optional[str] = None,
         comfyui_api_key: Optional[str] = None,
+        comfy_cloud_base_url: Optional[str] = None,
+        comfy_cloud_api_key: Optional[str] = None,
+        comfy_cloud_timeout: Optional[int] = None,
         runninghub_api_key: Optional[str] = None,
         runninghub_concurrent_limit: Optional[int] = None,
         runninghub_instance_type: Optional[str] = None
@@ -159,6 +165,12 @@ class ConfigManager:
             updates["comfyui_url"] = comfyui_url
         if comfyui_api_key is not None:
             updates["comfyui_api_key"] = comfyui_api_key
+        if comfy_cloud_base_url is not None:
+            updates["comfy_cloud_base_url"] = comfy_cloud_base_url
+        if comfy_cloud_api_key is not None:
+            updates["comfy_cloud_api_key"] = comfy_cloud_api_key
+        if comfy_cloud_timeout is not None:
+            updates["comfy_cloud_timeout"] = comfy_cloud_timeout
         if runninghub_api_key is not None:
             updates["runninghub_api_key"] = runninghub_api_key
         if runninghub_concurrent_limit is not None:
@@ -169,4 +181,3 @@ class ConfigManager:
         
         if updates:
             self.update({"comfyui": updates})
-

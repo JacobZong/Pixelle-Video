@@ -27,6 +27,7 @@ from pixelle_video.utils.os_util import (
     list_resource_files,
     list_resource_dirs
 )
+from pixelle_video.services.comfy_cloud import ComfyCloudExecutor
 
 
 class ComfyBaseService:
@@ -153,9 +154,15 @@ class ComfyBaseService:
             content = json.load(f)
         
         # Build base info
+        source_label = {
+            "comfy_cloud": "ComfyUI Cloud",
+            "runninghub": "RunningHub",
+            "selfhost": "SelfHost",
+        }.get(source, source.title())
+
         workflow_info = {
             "name": file_path.name,
-            "display_name": f"{file_path.name} - {source.title()}",
+            "display_name": f"{file_path.name} - {source_label}",
             "source": source,
             "path": str(file_path),
             "key": f"{source}/{file_path.name}"
@@ -280,8 +287,64 @@ class ComfyBaseService:
         if final_instance_type and final_instance_type.strip():
             kit_config["runninghub_instance_type"] = final_instance_type
         
-        logger.debug(f"ComfyKit config: {kit_config}")
+        redacted_config = dict(kit_config)
+        for key in ("api_key", "runninghub_api_key"):
+            if redacted_config.get(key):
+                redacted_config[key] = "***"
+        logger.debug(f"ComfyKit config: {redacted_config}")
         return kit_config
+
+    def _prepare_comfy_cloud_config(self) -> Dict[str, Any]:
+        """
+        Prepare ComfyUI Cloud configuration.
+
+        Keep Cloud separate from local ComfyUI. For backward compatibility, if
+        the saved local URL is already cloud.comfy.org, use that as Cloud base.
+        """
+        configured_base_url = self.global_config.get("comfy_cloud_base_url")
+        local_url = self.global_config.get("comfyui_url")
+        if not configured_base_url and local_url and "cloud.comfy.org" in local_url:
+            configured_base_url = local_url
+
+        api_key = (
+            self.global_config.get("comfy_cloud_api_key")
+            or os.getenv("COMFY_CLOUD_API_KEY")
+            or self.global_config.get("comfyui_api_key")
+        )
+
+        return {
+            "base_url": configured_base_url or os.getenv("COMFY_CLOUD_BASE_URL") or "https://cloud.comfy.org/api",
+            "api_key": api_key,
+            "timeout": self.global_config.get("comfy_cloud_timeout") or int(os.getenv("COMFY_CLOUD_TIMEOUT", "600")),
+        }
+
+    async def _execute_workflow(self, workflow_info: Dict[str, Any], workflow_params: Dict[str, Any]):
+        """
+        Execute workflow through the correct provider.
+
+        Sources:
+        - runninghub: RunningHub workflow id through ComfyKit
+        - comfy_cloud: official ComfyUI Cloud API
+        - selfhost/other: local or remote self-hosted ComfyUI through ComfyKit
+        """
+        source = workflow_info["source"]
+
+        if source == "comfy_cloud":
+            cloud_config = self._prepare_comfy_cloud_config()
+            executor = ComfyCloudExecutor(**cloud_config)
+            logger.info(f"Executing ComfyUI Cloud workflow: {workflow_info['path']}")
+            return await executor.execute_workflow(workflow_info["path"], workflow_params)
+
+        kit = await self.core._get_or_create_comfykit()
+
+        if source == "runninghub" and "workflow_id" in workflow_info:
+            workflow_input = workflow_info["workflow_id"]
+            logger.info(f"Executing RunningHub workflow: {workflow_input}")
+        else:
+            workflow_input = workflow_info["path"]
+            logger.info(f"Executing selfhost workflow: {workflow_input}")
+
+        return await kit.execute(workflow_input, workflow_params)
     
     def list_workflows(self) -> List[Dict[str, Any]]:
         """
@@ -329,4 +392,3 @@ class ComfyBaseService:
             f"default={default!r} "
             f"available=[{available}]>"
         )
-

@@ -72,6 +72,9 @@ class ComfyUIConfig(BaseModel):
     """ComfyUI configuration (includes global settings and service-specific configs)"""
     comfyui_url: str = Field(default="http://127.0.0.1:8188", description="ComfyUI Server URL")
     comfyui_api_key: Optional[str] = Field(default=None, description="ComfyUI API Key (optional)")
+    comfy_cloud_base_url: str = Field(default="https://cloud.comfy.org/api", description="ComfyUI Cloud API base URL")
+    comfy_cloud_api_key: Optional[str] = Field(default=None, description="ComfyUI Cloud API Key (optional)")
+    comfy_cloud_timeout: int = Field(default=600, ge=30, le=7200, description="ComfyUI Cloud job timeout in seconds")
     runninghub_api_key: Optional[str] = Field(default=None, description="RunningHub API Key (optional)")
     runninghub_concurrent_limit: int = Field(default=1, ge=1, le=10, description="RunningHub concurrent execution limit (1-10)")
     runninghub_instance_type: Optional[str] = Field(default=None, description="RunningHub instance type (optional, set to 'plus' for 48GB VRAM)")
@@ -110,4 +113,3 @@ class PixelleVideoConfig(BaseModel):
     def to_dict(self) -> dict:
         """Convert to dictionary (for backward compatibility)"""
         return self.model_dump()
-
