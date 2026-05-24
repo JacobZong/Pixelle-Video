@@ -21,6 +21,21 @@ stop_pid_file() {
   rm -f "$pid_file"
 }
 
+stop_screen_session() {
+  local session_file="$1"
+  if [ ! -f "$session_file" ]; then
+    return 0
+  fi
+
+  local session
+  session="$(cat "$session_file")"
+  if [ -n "$session" ] && command -v screen >/dev/null 2>&1; then
+    screen -S "$session" -X quit >/dev/null 2>&1 || true
+    echo "Stopped screen session $session"
+  fi
+  rm -f "$session_file"
+}
+
 stop_project_listener() {
   local port="$1"
   local pids
@@ -37,6 +52,8 @@ stop_project_listener() {
   done
 }
 
+stop_screen_session "$STATE_DIR/api.session"
+stop_screen_session "$STATE_DIR/web.session"
 stop_pid_file "$STATE_DIR/api.pid"
 stop_pid_file "$STATE_DIR/web.pid"
 stop_project_listener "$API_PORT"

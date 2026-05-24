@@ -49,21 +49,37 @@ wait_for_url() {
 check_port_free "$API_PORT"
 check_port_free "$WEB_PORT"
 
-nohup "$PYTHON_BIN" "$ROOT_DIR/api/app.py" \
-  --host "$HOST" \
-  --port "$API_PORT" \
-  > "$STATE_DIR/api.log" 2>&1 &
-echo "$!" > "$STATE_DIR/api.pid"
+cat > "$STATE_DIR/api.command.sh" <<EOF
+#!/usr/bin/env bash
+cd "$ROOT_DIR"
+exec "$PYTHON_BIN" "$ROOT_DIR/api/app.py" --host "$HOST" --port "$API_PORT" >> "$STATE_DIR/api.log" 2>&1
+EOF
 
-STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
-STREAMLIT_SERVER_HEADLESS=true \
-nohup "$PYTHON_BIN" -m streamlit run "$ROOT_DIR/web/app.py" \
-  --server.port="$WEB_PORT" \
-  --server.address="$HOST" \
-  --browser.gatherUsageStats=false \
-  --server.headless=true \
-  > "$STATE_DIR/web.log" 2>&1 &
-echo "$!" > "$STATE_DIR/web.pid"
+cat > "$STATE_DIR/web.command.sh" <<EOF
+#!/usr/bin/env bash
+cd "$ROOT_DIR"
+export STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+export STREAMLIT_SERVER_HEADLESS=true
+exec "$PYTHON_BIN" -m streamlit run "$ROOT_DIR/web/app.py" --server.port="$WEB_PORT" --server.address="$HOST" --browser.gatherUsageStats=false --server.headless=true >> "$STATE_DIR/web.log" 2>&1
+EOF
+
+chmod +x "$STATE_DIR/api.command.sh" "$STATE_DIR/web.command.sh"
+: > "$STATE_DIR/api.log"
+: > "$STATE_DIR/web.log"
+
+if command -v screen >/dev/null 2>&1; then
+  API_SESSION="pixelle-api-$API_PORT"
+  WEB_SESSION="pixelle-web-$WEB_PORT"
+  screen -dmS "$API_SESSION" "$STATE_DIR/api.command.sh"
+  screen -dmS "$WEB_SESSION" "$STATE_DIR/web.command.sh"
+  echo "$API_SESSION" > "$STATE_DIR/api.session"
+  echo "$WEB_SESSION" > "$STATE_DIR/web.session"
+else
+  nohup "$STATE_DIR/api.command.sh" >/dev/null 2>&1 &
+  echo "$!" > "$STATE_DIR/api.pid"
+  nohup "$STATE_DIR/web.command.sh" >/dev/null 2>&1 &
+  echo "$!" > "$STATE_DIR/web.pid"
+fi
 
 wait_for_url "http://$HOST:$API_PORT/health" "API"
 wait_for_url "http://$HOST:$WEB_PORT/_stcore/health" "Web"
