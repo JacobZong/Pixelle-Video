@@ -7,11 +7,10 @@ HOST="${PIXELLE_HOST:-127.0.0.1}"
 API_PORT="${PIXELLE_API_PORT:-8500}"
 WEB_PORT="${PIXELLE_WEB_PORT:-8501}"
 PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
-STREAMLIT_BIN="$ROOT_DIR/.venv/bin/streamlit"
 
 mkdir -p "$STATE_DIR"
 
-if [ ! -x "$PYTHON_BIN" ] || [ ! -x "$STREAMLIT_BIN" ]; then
+if [ ! -x "$PYTHON_BIN" ]; then
   echo "Missing .venv dependencies. Run:"
   echo "  python3 -m venv .venv"
   echo "  .venv/bin/python -m pip install -e ."
@@ -58,7 +57,7 @@ echo "$!" > "$STATE_DIR/api.pid"
 
 STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
 STREAMLIT_SERVER_HEADLESS=true \
-nohup "$STREAMLIT_BIN" run "$ROOT_DIR/web/app.py" \
+nohup "$PYTHON_BIN" -m streamlit run "$ROOT_DIR/web/app.py" \
   --server.port="$WEB_PORT" \
   --server.address="$HOST" \
   --browser.gatherUsageStats=false \
